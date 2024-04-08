@@ -31,7 +31,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 if not os.path.exists(args.save):
     os.makedirs(args.save)
 
-model = resnet(depth=args.depth, dataset=args.dataset)
+model = resnet8x4(depth=args.depth, dataset=args.dataset)
 
 if args.cuda:
     model.cuda()
@@ -98,7 +98,7 @@ def test(model):
             batch_size=args.test_batch_size, shuffle=False, **kwargs)
     elif args.dataset == 'cifar100':
         test_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR100('./data.cifar100', train=False, transform=transforms.Compose([
+            datasets.CIFAR100('/home/szy/DIST_KD/classification/data/cifar/cifar-100-python', train=False, transform=transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])),
             batch_size=args.test_batch_size, shuffle=False, **kwargs)
@@ -123,7 +123,8 @@ acc = test(model)
 print("Cfg:")
 print(cfg)
 
-newmodel = resnet(depth=args.depth, dataset=args.dataset, cfg=cfg)
+newmodel = resnet8x4(depth=args.depth, dataset=args.dataset, cfg=cfg)
+
 if args.cuda:
     newmodel.cuda()
 
@@ -194,7 +195,7 @@ for layer_id in range(len(old_modules)):
 
             # If the current convolution is not the last convolution in the residual block, then we can change the 
             # number of output channels. Currently we use `conv_count` to detect whether it is such convolution.
-            if conv_count % 3 != 1:
+            if conv_count % 2 != 1:
                 w1 = w1[idx1.tolist(), :, :, :].clone()
             m1.weight.data = w1.clone()
             continue
@@ -212,6 +213,5 @@ for layer_id in range(len(old_modules)):
 
 torch.save({'cfg': cfg, 'state_dict': newmodel.state_dict()}, os.path.join(args.save, 'pruned.pth.tar'))
 
-print(newmodel)
 model = newmodel
 test(model)
