@@ -1,0 +1,1 @@
+这个是没有加dist的直接做的 resnet8x4架构，稀疏性训练后得到的finetune结果

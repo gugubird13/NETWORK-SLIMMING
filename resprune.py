@@ -31,7 +31,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 if not os.path.exists(args.save):
     os.makedirs(args.save)
 
-model = resnet8x4(depth=args.depth, dataset=args.dataset)
+model = resnet8x4()
 
 if args.cuda:
     model.cuda()
@@ -123,7 +123,7 @@ acc = test(model)
 print("Cfg:")
 print(cfg)
 
-newmodel = resnet8x4(depth=args.depth, dataset=args.dataset, cfg=cfg)
+newmodel = resnet8x4(cfg=cfg)
 
 if args.cuda:
     newmodel.cuda()

@@ -12,7 +12,7 @@ class KDLoss():
     kd loss wrapper.
     '''
 
-    def __init__(self, student, teacher, ori_loss, kd_method='kdt4', student_module='', teacher_module='', ori_loss_weight=1.0, kd_loss_weight=1.0):
+    def __init__(self, student, teacher, ori_loss, kd_method='kdt4', student_module='', teacher_module='', ori_loss_weight=1.0, kd_loss_weight=2.0):
         self.student = student
         self.teacher = teacher
         self.ori_loss = ori_loss

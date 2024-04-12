@@ -28,8 +28,8 @@ parser.add_argument('--s', type=float, default=0.0001,
                     help='scale sparse rate (default: 0.0001)')
 parser.add_argument('--refine', default='', type=str, metavar='PATH',
                     help='path to the pruned model to be fine tuned')
-parser.add_argument('--pretrained', default='', type=str, metavar='PATH',
-                    help='path to the pretrained model')
+parser.add_argument('--tfs', default='', type=str, metavar='PATH',
+                    help='path to the cfg')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=256, metavar='N',
@@ -64,6 +64,11 @@ parser.add_argument('--kd', default='', type=str,
                     help='knowledge distillation')
 parser.add_argument('--depth', default=19, type=int,
                     help='depth of the neural network')
+parser.add_argument('--warmup', default=120, type=int,
+                    help='warmup epochs')
+parser.add_argument('--knowledge-distillation', '-dist', dest='dist', action='store_true',
+                    help='train using dist')
+
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -117,14 +122,15 @@ else:
 ## Model stuff
 if args.refine:
     checkpoint = torch.load(args.refine)
-    model = models.__dict__[args.arch](dataset=args.dataset, depth=args.depth, cfg=checkpoint['cfg'])
+    model = models.__dict__[args.arch](cfg=checkpoint['cfg'])
     model.load_state_dict(checkpoint['state_dict'])
-elif args.pretrained:
-    print(args.depth)
-    model = models.__dict__[args.arch](dataset=args.dataset, depth=args.depth)
-    model.load_state_dict(torch.load(args.pretrained))
+elif args.tfs:
+    checkpoint = torch.load(args.tfs)
+    model = models.__dict__[args.arch](dataset=args.dataset, depth=args.depth, cfg=checkpoint['cfg'])
+elif args.dist == True:
+    model = models.__dict__[args.arch]()
 else:
-    model = models.__dict__[args.arch](dataset=args.dataset, depth=args.depth)
+    model = models.__dict__[args.arch]()
 
 if args.cuda:
     model.cuda()
@@ -134,6 +140,7 @@ print(model)
 
 # 创建优化器
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+print(model.parameters())
 
 # 创建调度器，每30轮衰减
 scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
@@ -174,14 +181,18 @@ def train(epoch):
         teacher_model.load_state_dict(ckpt, strict=False)
     if args.cuda and args.kd != '':
         teacher_model = teacher_model.cuda()
-    loss_fn = KDLoss(model, teacher_model, ori_loss=orign_loss_fn, kd_method=args.kd)
+        loss_fn = KDLoss(model, teacher_model, ori_loss=orign_loss_fn, kd_method=args.kd)
+    
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        loss = loss_fn(data, target)
+        if args.cuda and args.kd != '':
+            loss = loss_fn(data, target)
+        else:
+            loss = F.cross_entropy(output, target)
         pred = output.data.max(1, keepdim=True)[1]
         loss.backward()
         if args.sr:
@@ -236,7 +247,7 @@ best_prec1 = 0.
 # print("Best accuracy: "+str(best_prec1))
 
 for epoch in range(args.start_epoch, args.epochs):
-    if epoch >= 150:
+    if epoch >= args.warmup:
         scheduler.step()
 
     # 获取当前学习率

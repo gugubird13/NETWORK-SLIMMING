@@ -14,6 +14,7 @@ class CrossEntropyLabelSmooth(nn.Module):
     def forward(self, inputs, targets):
         log_probs = self.logsoftmax(inputs)
         # one hot 编码
+
         targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
         # 采用平滑技术，one hot 编码太具有单一性，避免过拟合，提高泛化能力
         targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes

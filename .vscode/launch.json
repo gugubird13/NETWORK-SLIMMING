@@ -18,8 +18,9 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--dataset", "cifar100",  "--depth", "8", "--percent", "0.1", "--model", 
-            "/home/szy/network-slimming/experiments/checkpoints_cifar_cfg7/model_best.pth.tar", "--save", "./experiments/pruneresnet1"]             
+            "args": ["--dataset", "cifar100", "--depth", "8", "--percent", "0.25", "--model", 
+            "/home/szy/network-slimming/experiments/sparisty/cifar8x4_back1e5/model_best.pth.tar", 
+            "--save", "./experiments/pruned_models/cifar8x4_back"]             
         }
     ]
 }
