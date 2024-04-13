@@ -68,6 +68,8 @@ parser.add_argument('--warmup', default=120, type=int,
                     help='warmup epochs')
 parser.add_argument('--knowledge-distillation', '-dist', dest='dist', action='store_true',
                     help='train using dist')
+parser.add_argument('--stepsize', default=30, type=int,
+                    help='step size')
 
 
 args = parser.parse_args()
@@ -143,7 +145,7 @@ optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, we
 print(model.parameters())
 
 # 创建调度器，每30轮衰减
-scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+scheduler = lr_scheduler.StepLR(optimizer, step_size=args.stepsize, gamma=0.1)
 
 ckpt_manager = CheckpointManager(model, optimizer, save_dir=args.save)
 if args.resume:
@@ -275,3 +277,4 @@ for epoch in range(args.start_epoch, args.epochs):
         param_group['lr'] = max(param_group['lr'], 1.0e-06)
 
 print("Best accuracy: "+str(best_prec1))
+
