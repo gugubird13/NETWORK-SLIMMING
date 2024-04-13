@@ -6,7 +6,7 @@ This repository contains an official pytorch implementation for the following pa
 
 Original implementation: [slimming](https://github.com/liuzhuang13/slimming) in Torch.    
 The code is based on [pytorch-slimming](https://github.com/foolwood/pytorch-slimming). We add support for ResNet and DenseNet.  
-```
+
 
 
 感谢 network slimming的方法，这里魔改了，使用的resnet8x4 继续往下做剪枝，同时加入了教师模型 resnet32x4，并进行知识蒸馏，也就是loss多了个知识蒸馏的知识
