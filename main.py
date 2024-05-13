@@ -68,6 +68,10 @@ parser.add_argument('--warmup', default=120, type=int,
                     help='warmup epochs')
 parser.add_argument('--knowledge-distillation', '-dist', dest='dist', action='store_true',
                     help='train using dist')
+parser.add_argument('--random', default='', type=str, metavar='PATH',
+                    help='path to the pruned model to be random fine tuned')
+parser.add_argument('--prto', type=float, default=0.1, metavar='Ratio',
+                    help='random prune ratio (default: 0.1)')
 parser.add_argument('--stepsize', default=30, type=int,
                     help='step size')
 
@@ -131,6 +135,15 @@ elif args.tfs:
     model = models.__dict__[args.arch](dataset=args.dataset, depth=args.depth, cfg=checkpoint['cfg'])
 elif args.dist == True:
     model = models.__dict__[args.arch]()
+elif args.random == True:
+    import torch.nn.utils.prune as prune
+    checkpoint = torch.load(args.random)
+    model = models.__dict__[args.arch](cfg=checkpoint['cfg'])
+    model.load_state_dict(checkpoint['state_dict'])
+    # random prune
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            prune.l1_unstructured(m, name='weight', amount=args.prto)
 else:
     model = models.__dict__[args.arch]()
 

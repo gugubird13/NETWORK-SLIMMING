@@ -67,9 +67,14 @@ def get_flops_hook(model, input_shape=(3, 224, 224)):
 
 if __name__ == '__main__':
     from cifar_preresnet import resnet8x4
-    checkpoint = torch.load("/home/szy/network-slimming/experiments/prune_cifar_resnet_40p/pruned.pth.tar")
-    model = resnet8x4(depth=8, dataset='cifar100', cfg=checkpoint['cfg'])
+    checkpoint = torch.load("/home/szy/network-slimming/experiments/fine_tune/random_prune/5percent/model_best.pth.tar")
+    model = resnet8x4()
     model.load_state_dict(checkpoint['state_dict'])
-    print(model)
-    print(f'Model {model} created, params: {get_params(model) / 1e6:.3f} M, '
+    print(f'Model:{model} created, params: {get_params(model) / 1e6:.3f} M, '
         f'FLOPs: {get_flops(model, (3,32,32)) / 1e9:.3f} G')
+    
+    # checkpoint = torch.load("/home/szy/network-slimming/experiments/pruned_models/cifar8x4_dist_with_sparisty_25percent/pruned.pth.tar")
+    # new_model = resnet8x4(cfg=checkpoint['cfg'])
+    # new_model.load_state_dict(checkpoint['state_dict'])
+    # print(f'params: {get_params(new_model) / 1e6:.3f} M, '
+    #     f'FLOPs: {get_flops(new_model, (3,32,32)) / 1e9:.3f} G')
